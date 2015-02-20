@@ -1,8 +1,8 @@
-#' Run PANDA algorithm
+#' Passing Messages between Biological Networks to Refine Predicted Interactions
 #'
 #' This function runs the PANDA algorithm 
 #' 
-#' @param motif A motif dataset, a data.frame containing 3 columns. Each row describes an motif associated with a transcription factor (column 1) a gene (column 2) and a score (column 3) for the motif.
+#' @param motif A motif dataset, a data.frame, matrix or exprSet containing 3 columns. Each row describes an motif associated with a transcription factor (column 1) a gene (column 2) and a score (column 3) for the motif.
 #' @param expr An expression dataset, as a genes (rows) by samples (columns) data.frame
 #' @param ppi A Protein-Protein interaction dataset, a data.frame containing 3 columns. Each row describes a protein-protein interaction between transcription factor 1(column 1), transcription factor 2 (column 2) and a score (column 3) for the interaction.
 #' @param update.method function for iterative updating.  This must be one of "tanimoto" and "danmethod"(in development)
@@ -15,7 +15,7 @@
 #' @param randomize method by which to randomize gene expression matrix.  Default "None".  Must be one of "None", "within.gene", "by.genes".  "within.gene" randomization scrambles each row of the gene expression matrix, "by.gene" scrambles gene labels.
 #' @keywords keywords
 #' @export
-#' @return A list containing matrices describing networks achieved by convergence with PANDA algorithm.  
+#' @return An object of class "panda" containing matrices describing networks achieved by convergence with PANDA algorithm.  
 #' "reg.net" is the regulatory network
 #' "coreg.net" is the coregulatory network
 #' "coop.net" is the cooperative network
@@ -26,25 +26,25 @@
 #' panda.res.sr <- panda(yeast$motif,yeast$exp.sr,yeast$ppi,hamming=.001)
 #' @references
 #' Glass K, Huttenhower C, Quackenbush J, Yuan GC. Passing Messages Between Biological Networks to Refine Predicted Interactions. PLoS One. 2013 May 31;8(5):e64832. 
-
- 
-
-panda <- function(motif, 
-                  expr=NULL, 
-                  ppi=NULL, 
-                  update.method='tanimoto', 
-                  alpha=0.1, 
-                  hamming=0.00001, 
-                  k=NA, 
-                  output=c('regulatory','coexpression','cooperative'), 
-                  z.scale=T,
-                  progress=FALSE,
-                  randomize="None"){
+panda <- function( motif, 
+                   expr=NULL, 
+                   ppi=NULL, 
+                   update.method='tanimoto', 
+                   alpha=0.1, 
+                   hamming=0.00001, 
+                   k=NA, 
+                   output=c('regulatory','coexpression','cooperative'), 
+                   z.scale=T,
+                   progress=FALSE,
+                   randomize="None"){
   if(progress)
     print('Initializing and validating')
   expr.data  <- expr
   motif.data <- motif
   ppi.data   <- ppi
+  
+  if(class(expr)=="ExpressionSet")
+    expr.data <- expr@assayData
   
   # Create vectors for TF names and Gene names from Motif dataset
   tf.names   <- sort(unique(motif.data[,1]))
@@ -105,22 +105,8 @@ panda <- function(motif,
     ppi.data <- diag(num.TFs)
   }
   
-  # Replaced this with cleaner code below 1/9/15
-#   Idx1=match(motif.data[,1], tf.names);
-#   Idx2=match(motif.data[,2], gene.names);
-#   Idx=(Idx2-1)*num.TFs+Idx1;
-#   regulatory.network=matrix(data=0, num.TFs, num.genes);
-#   regulatory.network[Idx]=as.numeric(motif.data[,3])
-#   starting.motifs <- regulatory.network
-  
   # Convert 3 column format to matrix format
   regulatory.network <- spread.net(motif.data)
-
-## No longer necessary now that implemented own version of spread
-#   rownames(regulatory.network) <- regulatory.network[,1]
-#   # sort the TFs (rows), and remove redundant first column
-#   regulatory.network <- regulatory.network[order(rownames(regulatory.network)),-1]
-
 
   # sort the genes (columns)
   regulatory.network <- as.matrix(regulatory.network[,order(colnames(regulatory.network))])
@@ -143,11 +129,6 @@ panda <- function(motif,
   tf.coop.network[Idx[!is.na(Idx)]]=as.numeric(ppi.data[,3])[!is.na(Idx)];
   colnames(tf.coop.network) <- tf.names
   rownames(tf.coop.network) <- tf.names
-  
-  # Don't use spread here since the total TFs used comes from motif data
-#   tf.coop.network <- tidyr::spread(ppi.data, V1, V3, fill=0)
-#   dim(tf.coop.network)
-#   tf.coop.network[1:10,1:10]
   
   ## Run PANDA ##
   tic=proc.time()[3];
@@ -226,7 +207,10 @@ panda <- function(motif,
   if("cooperative"%in%output){
     res.list$coop.net <- tf.coop.network
   }
-  return(res.list)  
+  res <- panda.obj(reg.net=regulatory.network,
+                   coreg.net=gene.coreg,
+                   coop.net=tf.coop.network)
+  return(res)  
 }
 
 normalize.network<-function(X,update.method)
@@ -316,4 +300,82 @@ spread.net <- function(df){
     spread.df[as.character(df[i,1]),as.character(df[i,2])] <- df[i,3]
   }
   spread.df
+}
+
+#' Top edges
+#'
+#' topedges gets a network from a panda obj with a specified cutoff based on magnitude of edgeweight.
+#' 
+#' @param x an object of class "panda"
+#' @param count an optional integer indicating number of top edges to be included in regulatory network.
+#' @param cutoff an optional numeric indicating the z-score edge weight cutoff to be used to identify edges. Default is 3.0.  Not used if count is not NA.
+#' @param networks an optional vector specifying which networks to be included in output.  May be any combination of c("coregulation","cooperation","regulatory").
+#' @keywords keywords
+#' @export
+#' @return An object of class "panda" containing binary matrices indicating the existence of an edge between two nodes.  For regulatory network the matrix indicates an edge between a transcription factor (row) and a gene (column)
+#' @examples
+#' data(yeast)
+#' panda.res.cc <- panda(yeast$motif,yeast$exp.cc,yeast$ppi,hamming=.001,progress=T)
+#' top.panda.res.cc <- topedges(panda.res.cc,1000)
+topedges <- function(x, count=NA, cutoff=2.0, networks=c("coregulation","cooperation","regulatory")){
+  if(class(x)!="panda"){
+    warning(paste(sep="","Cannot run topedges on object of class '",class(x),"'.  Must be of class 'panda'"))
+    stop
+  }
+  if (!is.na(count)){
+    cutoff <- sort(x@reg.net)[length(x@reg.net)-(count-1)]
+  }
+  regulatory.network <- apply(x@reg.net>cutoff, 2,as.numeric)
+  rownames(regulatory.network)<-rownames(x@reg.net)
+  gene.coreg <- apply(x@coreg.net>cutoff, 2,as.numeric)
+  rownames(gene.coreg)<-rownames(x@coreg.net)
+  tf.coop.network <- apply(x@coop.net>cutoff, 2,as.numeric)
+  rownames(tf.coop.network)<-rownames(x@coop.net)
+  
+  res <- panda.obj(reg.net=regulatory.network,
+                   coreg.net=gene.coreg,
+                   coop.net=tf.coop.network)
+  return(res)
+}
+
+#' Subnetwork
+#'
+#' subnetwork gets a bipartite network containing only the transcription factors or genes and their respective connections
+#' 
+#' @param x an object of class "panda"
+#' @param nodes character vector containing the transcription factor or gene labels to subset
+#' @param sub.tf an optional logical indicating whether to subset by transcription factor.  Default is TRUE.
+#' @keywords keywords
+#' @export
+#' @return An matrix describing the subsetted bipartite network.
+#' @examples
+#' data(yeast)
+#' panda.res.cc <- panda(yeast$motif,yeast$exp.cc,yeast$ppi,hamming=.001,progress=T)
+#' top.panda.res.cc <- topedges(panda.res.cc,1000)
+#' subnet.panda.res.cc <- subnetwork(top.panda.res.cc,c("YKR099W","YDR423C","YDL056W","YLR182W"))
+subnetwork <- function(x, nodes, sub.tf=T){
+  if(class(x)!="panda"){
+    warning(paste(sep="","Cannot run subnetwork on object of class '",class(x),"'.  Must be of class 'panda'"))
+    stop
+  }
+  if (sub.tf){
+    subnet <- x@reg.net[nodes,]
+    edgeexists <- apply(subnet,2,sum)>0
+    subnet <- subnet[,edgeexists]
+  } else {
+    subnet <- x@reg.net[,nodes]
+    edgeexists <- apply(subnet,1,sum)>0
+    subnet <- subnet[edgeexists,]    
+  }
+  return(subnet)
+}
+
+
+panda.obj <- setClass("panda", slots=c("reg.net","coreg.net","coop.net"))
+summary.panda <- function(x){
+  l <- list(coreg.net=dim(x@coreg.net),reg.net=dim(x@reg.net),coop.net=dim(x@coop.net))
+  print(l)
+}
+plot.panda <- function(x){
+  print("Plotting function has not been implemented for panda... yet.")
 }

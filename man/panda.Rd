@@ -2,7 +2,7 @@
 % Please edit documentation in R/algorithm_functions.R
 \name{panda}
 \alias{panda}
-\title{Run PANDA algorithm}
+\title{Passing Messages between Biological Networks to Refine Predicted Interactions}
 \usage{
 panda(motif, expr = NULL, ppi = NULL, update.method = "tanimoto",
   alpha = 0.1, hamming = 1e-05, k = NA, output = c("regulatory",
@@ -10,7 +10,7 @@ panda(motif, expr = NULL, ppi = NULL, update.method = "tanimoto",
   randomize = "None")
 }
 \arguments{
-\item{motif}{A motif dataset, a data.frame containing 3 columns. Each row describes an motif associated with a transcription factor (column 1) a gene (column 2) and a score (column 3) for the motif.}
+\item{motif}{A motif dataset, a data.frame, matrix or exprSet containing 3 columns. Each row describes an motif associated with a transcription factor (column 1) a gene (column 2) and a score (column 3) for the motif.}
 
 \item{expr}{An expression dataset, as a genes (rows) by samples (columns) data.frame}
 
@@ -33,7 +33,7 @@ panda(motif, expr = NULL, ppi = NULL, update.method = "tanimoto",
 \item{randomize}{method by which to randomize gene expression matrix.  Default "None".  Must be one of "None", "within.gene", "by.genes".  "within.gene" randomization scrambles each row of the gene expression matrix, "by.gene" scrambles gene labels.}
 }
 \value{
-A list containing matrices describing networks achieved by convergence with PANDA algorithm.
+An object of class "panda" containing matrices describing networks achieved by convergence with PANDA algorithm.
 "reg.net" is the regulatory network
 "coreg.net" is the coregulatory network
 "coop.net" is the cooperative network
