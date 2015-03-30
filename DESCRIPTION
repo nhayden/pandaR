@@ -1,10 +1,14 @@
-Package: PANDA
+Package: pandaR
 Title: PANDA algorithm
-Version: 0.3
-Authors@R: "Dan Schlauch <dschlauch@fas.harvard.edu> [aut, cre]"
-Description: Runs PANDA, an algorithm for discovering novel network structure 
-	by combining information from multiple complimentary data sources.
+Version: 0.4.1
+Author: "Dan Schlauch <dschlauch@fas.harvard.edu>"
+Maintainer: Dan Schlauch <dschlauch@fas.harvard.edu>
+Description: Runs PANDA, an algorithm for discovering novel network structure
+    by combining information from multiple complimentary data sources.
 Depends: R (>= 3.0.2)
-Imports: 
-License: What license is it under?
+Suggests: knitr, igraph
+biocViews: StatisticalMethod, GraphAndNetwork, Microarray, GeneRegulation, NetworkInference, GeneExpression, Transcription, Network
+VignetteBuilder: knitr
+Imports:
+License: GPL-2
 LazyData: true
