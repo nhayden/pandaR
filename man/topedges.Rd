@@ -23,9 +23,11 @@ An object of class "panda" containing binary matrices indicating the existence o
 topedges gets a network from a panda obj with a specified cutoff based on magnitude of edgeweight.
 }
 \examples{
+\donttest{
 data(pandaToyData)
 pandaRes <- panda(pandaToyData$motif,
            pandaToyData$expression,pandaToyData$ppi,hamming=.001,progress=TRUE)
+}
 topPandaRes <- topedges(pandaRes,1000)
 }
 \keyword{keywords}

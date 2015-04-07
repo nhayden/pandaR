@@ -20,11 +20,12 @@ An matrix describing the subsetted bipartite network.
 subnetwork gets a bipartite network containing only the transcription factors or genes and their respective connections
 }
 \examples{
+\donttest{
 data(pandaToyData)
 pandaRes <- panda(pandaToyData$motif,
            pandaToyData$expression,pandaToyData$ppi,hamming=.001,progress=TRUE)
 topPandaRes <- topedges(pandaRes,1000)
-subnet.pandaRes <- subnetwork(topPandaRes,c("AR","ARID3A","ELK1"))
+subnet.pandaRes <- subnetwork(topPandaRes,c("AR","ARID3A","ELK1"))}
 }
 \keyword{keywords}
 

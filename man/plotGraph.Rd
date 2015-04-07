@@ -16,11 +16,12 @@ An matrix describing the subsetted bipartite network.
 plotGraph plots a bipartite graph
 }
 \examples{
+\donttest{
 data(pandaToyData)
 pandaRes <- panda(pandaToyData$motif,
            pandaToyData$expression,pandaToyData$ppi,hamming=.001,progress=TRUE)
 topPandaRes <- topedges(pandaRes,1000)
-subnet.pandaRes <- subnetwork(topPandaRes,c("AR","ARID3A","ELK1"))
+subnet.pandaRes <- subnetwork(topPandaRes,c("AR","ARID3A","ELK1"))}
 }
 \keyword{keywords}
 

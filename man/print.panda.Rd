@@ -18,10 +18,11 @@ Summary description of panda S4 object
 summarizes the results of a PANDA analysis
 }
 \examples{
+\donttest{
 data(pandaToyData)
 panda.res <- panda(pandaToyData$motif,
            pandaToyData$expression,pandaToyData$ppi,hamming=.001,progress=TRUE)
-print(panda.res)
+print(panda.res)}
 }
 \keyword{keywords}
 

@@ -18,10 +18,12 @@ Plot of the distribution of edge weights in the regulatory network.
 summarizes the results of a PANDA analysis
 }
 \examples{
+\donttest{
 data(pandaToyData)
 panda.res <- panda(pandaToyData$motif,
            pandaToyData$expression,pandaToyData$ppi,hamming=.001,progress=TRUE)
 plot(panda.res)
+}
 }
 \keyword{keywords}
 
