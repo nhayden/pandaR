@@ -27,8 +27,10 @@ topedges gets a network from a panda obj with a specified cutoff based on magnit
 data(pandaToyData)
 pandaRes <- panda(pandaToyData$motif,
            pandaToyData$expression,pandaToyData$ppi,hamming=.001,progress=TRUE)
-}
 topPandaRes <- topedges(pandaRes,1000)
+}
+data(pandaResult)
+topPandaRes <- topedges(pandaResult,1000)
 }
 \keyword{keywords}
 
